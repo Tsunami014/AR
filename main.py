@@ -31,8 +31,7 @@ def tex_coords(top, bottom, side):
     return result
 
 #block type names and location on template go here
-BLOCK1 = tex_coords((4, 4), (3, 0), (3, 0))
-# BLOCK1 = tex_coords((3, 0), (3, 0), (3, 0))
+BLOCK1 = tex_coords((3, 0), (3, 0), (3, 0))
 
 def verts(x, y, z, n):
     vertices = (
@@ -108,7 +107,7 @@ def Cube(vx,vy,vz,block):
         glEnd()
 
 def loadTexture():
-    textureSurface = pygame.image.load('testImgs/model.jpg')
+    textureSurface = pygame.image.load('testImgs/mars.png')
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
     width = textureSurface.get_width()
     height = textureSurface.get_height()
@@ -128,12 +127,9 @@ def loadTexture():
 
     return texid
 
-    glDisable(GL_TEXTURE_2D)
-
 pygame.init()
 display = (800, 600)
-scree = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
-
+screen = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
 
 glEnable(GL_DEPTH_TEST)
 glEnable(GL_LIGHTING)
@@ -156,7 +152,7 @@ viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
 glLoadIdentity()
 
 # init mouse movement and center mouse on screen
-displayCenter = [scree.get_size()[i] // 2 for i in range(2)]
+displayCenter = [screen.get_size()[i] // 2 for i in range(2)]
 mouseMove = [0, 0]
 pygame.mouse.set_pos(displayCenter)
 
@@ -184,7 +180,6 @@ while run:
     if not paused:
         # get keys
         keypress = pygame.key.get_pressed()
-        #mouseMove = pygame.mouse.get_rel()
     
         # init model view matrix
         glLoadIdentity()
@@ -214,7 +209,7 @@ while run:
         # apply the left and right rotation
         glRotatef(mouseMove[0]*0.1, 0.0, 1.0, 0.0)
 
-        # multiply the current matrix by the get the new view matrix and store the final vie matrix 
+        # multiply the current matrix by the get the new view matrix and store the final view matrix 
         glMultMatrixf(viewMatrix)
         viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
 
