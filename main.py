@@ -32,6 +32,7 @@ def tex_coords(top, bottom, side):
 
 #block type names and location on template go here
 BLOCK1 = tex_coords((3, 0), (3, 0), (3, 0))
+# Get pic from https://stackoverflow.com/questions/68902541/my-pygame-pyopengl-code-seems-to-apply-a-texture-to-every-surface
 
 def verts(x, y, z, n):
     vertices = (
