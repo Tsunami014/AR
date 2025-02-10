@@ -1,0 +1,5 @@
+{
+    "ruff.lint.ignore": [
+        "F405"
+    ],
+}

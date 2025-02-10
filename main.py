@@ -1,19 +1,6 @@
 import pygame
 
-from OpenGL.GL import (
-    glBegin, glEnd, glTexCoord2f, glVertex3fv,
-    glEnable, glGenTextures, glBindTexture, glTexImage2D,
-    glTexParameterf, glLoadIdentity, glTranslatef, glRotatef,
-    glMatrixMode, glMultMatrixf, glGetFloatv, glPushMatrix,
-    glPopMatrix, glClear, glDisable, GL_QUADS, GL_LINES,
-    GL_DEPTH_TEST, GL_LIGHTING, GL_LIGHT0, GL_TEXTURE_2D,
-    GL_RGB, GL_RGBA, GL_UNSIGNED_BYTE, GL_REPEAT, GL_NEAREST,
-    GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_PROJECTION, GL_MODELVIEW,
-    GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_TEXTURE_MAG_FILTER, GL_TEXTURE_MIN_FILTER,
-    GL_MODELVIEW_MATRIX, glShadeModel, glColorMaterial, GL_SMOOTH, GL_COLOR_MATERIAL, 
-    GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, glLightfv, GL_AMBIENT, GL_DIFFUSE,
-    glColor4f, glVertex3f
-)
+from OpenGL.GL import *  # noqa: F403
 from OpenGL.GLU import gluPerspective, gluLookAt
 
 def tex_coord(x, y, n=4):
