@@ -134,7 +134,7 @@ run = True
 while run:
     mouseMove = [0, 0]
     for event in pygame.event.get():
-        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key in [pygame.K_ESCAPE, pygame.K_RETURN]):
+        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             run = False
         if event.type == pygame.KEYDOWN and event.key in [pygame.K_PAUSE, pygame.K_p]:
             paused = not paused
@@ -144,8 +144,18 @@ while run:
             mouseMove = [event.pos[i] - displayCenter[i] for i in range(2)]
             pygame.mouse.set_pos(displayCenter)
 
+    keypress = pygame.key.get_pressed()
+    if keypress[pygame.K_RETURN]:
+        width, height = display
+        glPixelStorei(GL_PACK_ALIGNMENT, 1)
+        buffer = glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
+        arr = np.frombuffer(buffer, dtype=np.uint8).reshape(height, width, 3)
+        arr = np.flipud(arr)  # flip vertically
+        pygame.mouse.set_visible(True)
+        AR.detect(arr)
+        pygame.mouse.set_visible(paused)
+    
     if not paused:
-        keypress = pygame.key.get_pressed()
         glLoadIdentity()
         up_down_angle += mouseMove[1] * 0.1
         glRotatef(up_down_angle, 1.0, 0.0, 0.0)
@@ -194,15 +204,6 @@ while run:
         glEnd()
 
         glPopMatrix()
-
-        if keypress[pygame.K_RETURN]:
-            width, height = display
-            glPixelStorei(GL_PACK_ALIGNMENT, 1)
-            buffer = glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
-            arr = np.frombuffer(buffer, dtype=np.uint8).reshape(height, width, 3)
-            arr = np.flipud(arr)  # flip vertically
-            AR.detect(arr)
-            pygame.mouse.set_visible(False)
         
         pygame.display.flip()
         pygame.time.wait(10)
