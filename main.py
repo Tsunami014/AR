@@ -1,238 +1,166 @@
 import pygame
-from pygame.locals import *
 
-from OpenGL.GL import *
-from OpenGL.GLU import *
+from OpenGL.GL import (
+    glBegin, glEnd, glTexCoord2f, glVertex3fv,
+    glEnable, glGenTextures, glBindTexture, glTexImage2D,
+    glTexParameterf, glLoadIdentity, glTranslatef, glRotatef,
+    glMatrixMode, glMultMatrixf, glGetFloatv, glPushMatrix,
+    glPopMatrix, glClear, glDisable, GL_QUADS, GL_LINES,
+    GL_DEPTH_TEST, GL_LIGHTING, GL_LIGHT0, GL_TEXTURE_2D,
+    GL_RGB, GL_RGBA, GL_UNSIGNED_BYTE, GL_REPEAT, GL_NEAREST,
+    GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_PROJECTION, GL_MODELVIEW,
+    GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_TEXTURE_MAG_FILTER, GL_TEXTURE_MIN_FILTER,
+    GL_MODELVIEW_MATRIX, glShadeModel, glColorMaterial, GL_SMOOTH, GL_COLOR_MATERIAL, 
+    GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, glLightfv, GL_AMBIENT, GL_DIFFUSE,
+    glColor4f, glVertex3f
+)
+from OpenGL.GLU import gluPerspective, gluLookAt
 
 def tex_coord(x, y, n=4):
-    """ Return the bounding vertices of the texture square."""
+    """Calculate texture coordinates for a given (x, y) position in an n x n texture atlas."""
     m = 1.0 / n
-    dx = x * m
-    dy = y * m
+    dx, dy = x * m, y * m
     return dx, dy, dx + m, dy, dx + m, dy + m, dx, dy + m
 
 def tex_coords(top, bottom, side):
-    """ Return a list of the texture squares for the top, bottom and side."""
-    top = tex_coord(*top)
-    bottom = tex_coord(*bottom)
-    side = tex_coord(*side)
-    result = [
-        (top),
-        (bottom),
-        (side),
-        (side),
-        (side),
-        (side),
-    ]
-    """result = []
-    result.extend(top)
-    result.extend(bottom)
-    result.extend(side * 4)"""
-    return result
+    """Generate texture coordinates for all faces of a block."""
+    return [tex_coord(*top), tex_coord(*bottom)] + [tex_coord(*side)] * 4
 
-#block type names and location on template go here
+# Define texture coordinates for a specific block type
 BLOCK1 = tex_coords((3, 0), (3, 0), (3, 0))
-# Get pic from https://stackoverflow.com/questions/68902541/my-pygame-pyopengl-code-seems-to-apply-a-texture-to-every-surface
 
-def verts(x, y, z, n):
-    vertices = (
-        (1+(2*x), -1+(2*y), -1+(2*z)),
-        (1+(2*x), 1+(2*y), -1+(2*z)),
-        (-1+(2*x), 1+(2*y), -1+(2*z)),
-        (-1+(2*x), -1+(2*y), -1+(2*z)),
-        (1+(2*x), -1+(2*y), 1+(2*z)),
-        (1+(2*x), 1+(2*y), 1+(2*z)),
-        (-1+(2*x), -1+(2*y), 1+(2*z)),
-        (-1+(2*x), 1+(2*y), 1+(2*z))
-        )
-    return(vertices)
-
-edges = (
-    (0,1),
-    (0,3),
-    (0,4),
-    (2,1),
-    (2,3),
-    (2,7),
-    (6,3),
-    (6,4),
-    (6,7),
-    (5,1),
-    (5,4),
-    (5,7)
+def verts(x, y, z):
+    """Return the 8 corner vertices of a cube centered at (x, y, z)."""
+    return (
+        (1+2*x, -1+2*y, -1+2*z), (1+2*x, 1+2*y, -1+2*z), (-1+2*x, 1+2*y, -1+2*z), (-1+2*x, -1+2*y, -1+2*z),
+        (1+2*x, -1+2*y, 1+2*z), (1+2*x, 1+2*y, 1+2*z), (-1+2*x, -1+2*y, 1+2*z), (-1+2*x, 1+2*y, 1+2*z)
     )
 
-surfaces = (
-    (0,1,2,3),
-    (3,2,7,6),
-    (6,7,5,4),
-    (4,5,1,0),
-    (1,5,7,2),
-    (4,0,3,6)
-    )
+# Define edges for wireframe rendering
+edges = ((0,1), (0,3), (0,4), (2,1), (2,3), (2,7), (6,3), (6,4), (6,7), (5,1), (5,4), (5,7))
 
+# Define surfaces for solid rendering
+surfaces = ((0,1,2,3), (3,2,7,6), (6,7,5,4), (4,5,1,0), (1,5,7,2), (4,0,3,6))
 
-forced = False
-def Cube(vx,vy,vz,block):
-    if not forced:
-        glBegin(GL_QUADS)
-        y = 0
-        for surface in surfaces:
-            x = 0
-            y+=1
-            for vertex in surface:
-                x+=1
-                glTexCoord2f(block[y-1][2*(x-1)], block[y-1][(2*x)-1])
-                #print(block[y-1][2*(x-1)], block[y-1][(2*x)-1])
-                glVertex3fv(verts(vx,vy,vz,1)[vertex])
-        glEnd()
-        
-        
-        glBegin(GL_LINES)
-        for edge in edges:
-            for vertex in edge:
-                glVertex3fv(verts(vx,vy,vz,1)[vertex])
-        glEnd()
-    else:
-        texX = 0.75
-        texY = 0.25
-        glBegin(GL_QUADS)
-        glTexCoord2f(0.0+texX, 0.0)
-        glVertex3f(-1.0, -1.0,  1.0)
-        glTexCoord2f(0.25+texX, 0.0)
-        glVertex3f(1.0, -1.0,  1.0)
-        glTexCoord2f(0.25+texX, 0.25)
-        glVertex3f(1.0,  1.0,  1.0)
-        glTexCoord2f(0.0+texX, 0.25)
-        glVertex3f(-1.0,  1.0,  1.0)
-        glEnd()
+def Cube(x, y, z, block):
+    """Render a textured cube at (x, y, z)."""
+    glBegin(GL_QUADS)
+    for i, surface in enumerate(surfaces):
+        for j, vertex in enumerate(surface):
+            glTexCoord2f(block[i][2*j], block[i][2*j+1])
+            glVertex3fv(verts(x, y, z)[vertex])
+    glEnd()
+    
+    glBegin(GL_LINES)
+    for edge in edges:
+        for vertex in edge:
+            glVertex3fv(verts(x, y, z)[vertex])
+    glEnd()
 
 def loadTexture():
+    """Load and configure a texture from an image file."""
     textureSurface = pygame.image.load('testImgs/mars.png')
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
-    width = textureSurface.get_width()
-    height = textureSurface.get_height()
+    width, height = textureSurface.get_size()
 
-    glColor3f(0.5, 0.5, 0.5)
     glEnable(GL_TEXTURE_2D)
     texid = glGenTextures(1)
-
     glBindTexture(GL_TEXTURE_2D, texid)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
-                 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
 
+    # Set texture parameters for wrapping and filtering
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-
     return texid
 
+# Initialize Pygame and OpenGL
 pygame.init()
 display = (800, 600)
-screen = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+screen = pygame.display.set_mode(display, pygame.DOUBLEBUF | pygame.OPENGL)
 
 glEnable(GL_DEPTH_TEST)
 glEnable(GL_LIGHTING)
 glShadeModel(GL_SMOOTH)
 glEnable(GL_COLOR_MATERIAL)
 glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-
 glEnable(GL_LIGHT0)
 glLightfv(GL_LIGHT0, GL_AMBIENT, [0.5, 0.5, 0.5, 1])
 glLightfv(GL_LIGHT0, GL_DIFFUSE, [1.0, 1.0, 1.0, 1])
 
-sphere = gluNewQuadric() 
-
 glMatrixMode(GL_PROJECTION)
-gluPerspective(45, (display[0]/display[1]), 0.1, 50.0)
+gluPerspective(45, display[0]/display[1], 0.1, 50.0)
 
 glMatrixMode(GL_MODELVIEW)
 gluLookAt(0, -8, 0, 0, 0, 0, 0, 0, 1)
 viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
 glLoadIdentity()
 
-# init mouse movement and center mouse on screen
+# Center mouse
 displayCenter = [screen.get_size()[i] // 2 for i in range(2)]
-mouseMove = [0, 0]
 pygame.mouse.set_pos(displayCenter)
+pygame.mouse.set_visible(False)
 
 loadTexture()
-
 up_down_angle = 0.0
 paused = False
 run = True
-pygame.mouse.set_visible(False)
+
+# Main loop
 while run:
+    mouseMove = [0, 0]
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key in [pygame.K_ESCAPE, pygame.K_RETURN]):
             run = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN:
-                run = False
-            if event.key == pygame.K_PAUSE or event.key == pygame.K_p:
-                paused = not paused
-                pygame.mouse.set_pos(displayCenter) 
-        if not paused: 
-            if event.type == pygame.MOUSEMOTION:
-                mouseMove = [event.pos[i] - displayCenter[i] for i in range(2)]
-            pygame.mouse.set_pos(displayCenter)    
+        if event.type == pygame.KEYDOWN and event.key in [pygame.K_PAUSE, pygame.K_p]:
+            paused = not paused
+            pygame.mouse.set_pos(displayCenter)
+        if not paused and event.type == pygame.MOUSEMOTION:
+            mouseMove = [event.pos[i] - displayCenter[i] for i in range(2)]
+            pygame.mouse.set_pos(displayCenter)
 
     if not paused:
-        # get keys
         keypress = pygame.key.get_pressed()
-    
-        # init model view matrix
         glLoadIdentity()
-
-        # apply the look up and down
-        up_down_angle += mouseMove[1]*0.1
+        up_down_angle += mouseMove[1] * 0.1
         glRotatef(up_down_angle, 1.0, 0.0, 0.0)
 
-        # init the view matrix
         glPushMatrix()
         glLoadIdentity()
 
-        # apply the movment 
+        # Movement controls
+        move_speed = 0.1
         if keypress[pygame.K_w]:
-            glTranslatef(0,0,0.1)
+            glTranslatef(0, 0, move_speed)
         if keypress[pygame.K_s]:
-            glTranslatef(0,0,-0.1)
+            glTranslatef(0, 0, -move_speed)
         if keypress[pygame.K_d]:
-            glTranslatef(-0.1,0,0)
+            glTranslatef(-move_speed, 0, 0)
         if keypress[pygame.K_a]:
-            glTranslatef(0.1,0,0)
+            glTranslatef(move_speed, 0, 0)
         if keypress[pygame.K_LSHIFT]:
-            glTranslatef(0,0.5,0)
+            glTranslatef(0, 0.5, 0)
         if keypress[pygame.K_SPACE]:
-            glTranslatef(0,-0.5,0)
+            glTranslatef(0, -0.5, 0)
 
-        # apply the left and right rotation
-        glRotatef(mouseMove[0]*0.1, 0.0, 1.0, 0.0)
-
-        # multiply the current matrix by the get the new view matrix and store the final view matrix 
+        # Apply rotation
+        glRotatef(mouseMove[0] * 0.1, 0.0, 1.0, 0.0)
         glMultMatrixf(viewMatrix)
         viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
-
-        # apply view matrix
         glPopMatrix()
         glMultMatrixf(viewMatrix)
-
-        #glLightfv(GL_LIGHT0, GL_POSITION, [1, -1, 1, 0])
-
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glPushMatrix()
-
-
         glEnable(GL_TEXTURE_2D)
-        Cube(0,0,0,BLOCK1)
-        Cube(1,0,0,BLOCK1)
-        Cube(0,1,0,BLOCK1)
-        Cube(0,0,1,BLOCK1)
-        Cube(-2,0,0,BLOCK1)
+        
+        # Render cubes
+        for pos in [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (-2, 0, 0)]:
+            Cube(*pos, BLOCK1)
         
         glDisable(GL_TEXTURE_2D)
+
         glColor4f(0.5, 0.5, 0.5, 1)
         glBegin(GL_QUADS)
         glVertex3f(-10, -10, -2)
@@ -242,7 +170,6 @@ while run:
         glEnd()
 
         glPopMatrix()
-
         pygame.display.flip()
         pygame.time.wait(10)
 
