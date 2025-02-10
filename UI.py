@@ -9,45 +9,7 @@ def tex_coord(x, y, n=4):
     dx, dy = x * m, y * m
     return dx, dy, dx + m, dy, dx + m, dy + m, dx, dy + m
 
-def tex_coords(top, bottom, side):
-    """Generate texture coordinates for all faces of a block."""
-    return [tex_coord(*top), tex_coord(*bottom)] + [tex_coord(*side)] * 4
-
-# Define texture coordinates for a specific block type
-BLOCK1 = tex_coords((0, 0), (1, 0), (2, 0))
-
-def verts(x, y, z):
-    """Return the 8 corner vertices of a cube centered at (x, y, z)."""
-    return (
-        (1+x, -1+y, -1+z), (1+x, 1+y, -1+z), (-1+x, 1+y, -1+z), (-1+x, -1+y, -1+z),
-        (1+x, -1+y, 1+z), (1+x, 1+y, 1+z), (-1+x, -1+y, 1+z), (-1+x, 1+y, 1+z)
-    )
-
-# Define edges for wireframe rendering
-edges = ((0,1), (0,3), (0,4), (2,1), (2,3), (2,7), (6,3), (6,4), (6,7), (5,1), (5,4), (5,7))
-
-# Define surfaces for solid rendering
-surfaces = ((0,1,2,3), (3,2,7,6), (6,7,5,4), (4,5,1,0), (1,5,7,2), (4,0,3,6))
-"""A tuple of indices referring to the verts(x, y, z) function, which returns the cube's corner points
-
-What idx of vertex (in the verts func) goes for each solid surface (face)"""
-
-def Cube(x, y, z, block):
-    """Render a textured cube at (x, y, z)."""
-    glBegin(GL_QUADS)
-    for i, surface in enumerate(surfaces):
-        for j, vertex in enumerate(surface):
-            glTexCoord2f(block[i][2*j], block[i][2*j+1])
-            glVertex3fv(verts(x, y, z)[vertex])
-    glEnd()
-    
-    glBegin(GL_LINES)
-    for edge in edges:
-        for vertex in edge:
-            glVertex3fv(verts(x, y, z)[vertex])
-    glEnd()
-
-def loadTexture(name='mars', nearest=False):
+def loadTexture(name, nearest=False):
     """Load and configure a texture from an image file."""
     textureSurface = pygame.image.load(f'testImgs/{name}.png')
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
@@ -68,6 +30,50 @@ def loadTexture(name='mars', nearest=False):
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
         glGenerateMipmap(GL_TEXTURE_2D)
     return texid
+
+class Cube:
+    def __init__(self, x, y, z):
+        self.x, self.y, self.z = x, y, z
+
+    @property
+    def tex_coords(self):
+        # Top, bottom, side*4
+        return [tex_coord(*(0, 0)), tex_coord(*(1, 0))] + [tex_coord(*(2, 0))] * 4
+
+    def verts(self):
+        # Return the 8 corner vertices of a cube centered at (x, y, z).
+        return (
+            (1+self.x, -1+self.y, -1+self.z), (1+self.x, 1+self.y, -1+self.z), (-1+self.x, 1+self.y, -1+self.z), (-1+self.x, -1+self.y, -1+self.z),
+            (1+self.x, -1+self.y, 1+self.z), (1+self.x, 1+self.y, 1+self.z), (-1+self.x, -1+self.y, 1+self.z), (-1+self.x, 1+self.y, 1+self.z)
+        )
+
+    # Define edges for wireframe rendering
+    edges = ((0,1), (0,3), (0,4), (2,1), (2,3), (2,7), (6,3), (6,4), (6,7), (5,1), (5,4), (5,7))
+    """A tuple of indices referring to the verts() function, which returns the cube's corner points
+
+    What idx of vertex (in the verts func) goes for each edge of the shape"""
+
+    # Define surfaces for solid rendering
+    surfaces = ((0,1,2,3), (3,2,7,6), (6,7,5,4), (4,5,1,0), (1,5,7,2), (4,0,3,6))
+    """A tuple of indices referring to the verts() function, which returns the cube's corner points
+
+    What idx of vertex (in the verts func) goes for each solid surface (face)"""
+
+    def render(self):
+        """Render a textured cube."""
+        glBegin(GL_QUADS)
+        block = self.tex_coords
+        for i, surface in enumerate(self.surfaces):
+            for j, vertex in enumerate(surface):
+                glTexCoord2f(block[i][2*j], block[i][2*j+1])
+                glVertex3fv(self.verts()[vertex])
+        glEnd()
+        
+        glBegin(GL_LINES)
+        for edge in self.edges:
+            for vertex in edge:
+                glVertex3fv(self.verts()[vertex])
+        glEnd()
 
 # Initialize Pygame and OpenGL
 pygame.init()
@@ -96,7 +102,11 @@ displayCenter = [screen.get_size()[i] // 2 for i in range(2)]
 pygame.mouse.set_pos(displayCenter)
 pygame.mouse.set_visible(False)
 
-loadTexture()
+objs = [
+    Cube(x, y, z) for x, y, z in [(0, 0, 0), (2, 0, 0), (0, 2, 0), (0, 0, 2), (-4, 0, 0)]
+]
+
+loadTexture('mars')
 up_down_angle = 0.0
 paused = False
 run = True
@@ -150,8 +160,8 @@ while run:
         glEnable(GL_TEXTURE_2D)
         
         # Render cubes
-        for pos in [(0, 0, 0), (2, 0, 0), (0, 2, 0), (0, 0, 2), (-4, 0, 0)]:
-            Cube(*pos, BLOCK1)
+        for o in objs:
+            o.render()
         
         glDisable(GL_TEXTURE_2D)
 
