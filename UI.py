@@ -36,12 +36,12 @@ def loadTexture(name, nearest=False):
 class Cube:
     def __init__(self, x, y, z, texture='mars'):
         self.x, self.y, self.z = x, y, z
-        self.textureId = loadTexture('mars')
+        self.textureId = loadTexture(texture)
 
     @property
     def tex_coords(self):
         # Top, bottom, side*4
-        return [tex_coord(*(0, 0)), tex_coord(*(1, 0))] + [tex_coord(*(2, 0))] * 4
+        return [tex_coord(0, 0), tex_coord(1, 0)] + [tex_coord(2, 0)] * 4
 
     def verts(self):
         # Return the 8 corner vertices of a cube centered at (x, y, z).
@@ -78,6 +78,18 @@ class Cube:
                 glVertex3fv(self.verts()[vertex])
         glEnd()
 
+class Flat(Cube):
+    @property
+    def tex_coords(self):
+        # Top, bottom, side*4
+        return [tex_coord(0, 0), tex_coord(1, 0), tex_coord(0, 0, 1)] + [tex_coord(2, 0)] * 3
+    
+    def verts(self):
+        return (
+            (1+self.x, -1+self.y, -1+self.z), (1+self.x, 1+self.y, -1+self.z), (-1+self.x, 1+self.y, -1+self.z), (-1+self.x, -1+self.y, -1+self.z),
+            (1+self.x, -1+self.y, self.z), (1+self.x, 1+self.y, self.z), (-1+self.x, -1+self.y, self.z), (-1+self.x, 1+self.y, self.z)
+        )
+
 # Initialize Pygame and OpenGL
 pygame.init()
 display = (800, 600)
@@ -107,6 +119,8 @@ pygame.mouse.set_visible(False)
 
 objs = [
     Cube(x, y, z) for x, y, z in [(0, 0, 0), (2, 0, 0), (0, 2, 0), (0, 0, 2), (-4, 0, 0)]
+] + [
+    Flat(-2, 0, -1, 'Find')
 ]
 
 up_down_angle = 0.0
