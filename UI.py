@@ -1,5 +1,6 @@
 import pygame
 
+from functools import lru_cache
 from OpenGL.GL import *  # noqa: F403
 from OpenGL.GLU import gluPerspective, gluLookAt
 
@@ -9,6 +10,7 @@ def tex_coord(x, y, n=4):
     dx, dy = x * m, y * m
     return dx, dy, dx + m, dy, dx + m, dy + m, dx, dy + m
 
+@lru_cache
 def loadTexture(name, nearest=False):
     """Load and configure a texture from an image file."""
     textureSurface = pygame.image.load(f'testImgs/{name}.png')
@@ -32,8 +34,9 @@ def loadTexture(name, nearest=False):
     return texid
 
 class Cube:
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z, texture='mars'):
         self.x, self.y, self.z = x, y, z
+        self.textureId = loadTexture('mars')
 
     @property
     def tex_coords(self):
@@ -60,7 +63,7 @@ class Cube:
     What idx of vertex (in the verts func) goes for each solid surface (face)"""
 
     def render(self):
-        """Render a textured cube."""
+        glBindTexture(GL_TEXTURE_2D, self.textureId)
         glBegin(GL_QUADS)
         block = self.tex_coords
         for i, surface in enumerate(self.surfaces):
@@ -106,7 +109,6 @@ objs = [
     Cube(x, y, z) for x, y, z in [(0, 0, 0), (2, 0, 0), (0, 2, 0), (0, 0, 2), (-4, 0, 0)]
 ]
 
-loadTexture('mars')
 up_down_angle = 0.0
 paused = False
 run = True
