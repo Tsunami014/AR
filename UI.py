@@ -3,6 +3,9 @@ import pygame
 from functools import lru_cache
 from OpenGL.GL import *  # noqa: F403
 from OpenGL.GLU import gluPerspective, gluLookAt
+import numpy as np
+
+import AR
 
 def tex_coord(x, y, n=4):
     """Calculate texture coordinates for a given (x, y) position in an n x n texture atlas."""
@@ -136,6 +139,7 @@ while run:
         if event.type == pygame.KEYDOWN and event.key in [pygame.K_PAUSE, pygame.K_p]:
             paused = not paused
             pygame.mouse.set_pos(displayCenter)
+            pygame.mouse.set_visible(paused)
         if not paused and event.type == pygame.MOUSEMOTION:
             mouseMove = [event.pos[i] - displayCenter[i] for i in range(2)]
             pygame.mouse.set_pos(displayCenter)
@@ -190,6 +194,16 @@ while run:
         glEnd()
 
         glPopMatrix()
+
+        if keypress[pygame.K_RETURN]:
+            width, height = display
+            glPixelStorei(GL_PACK_ALIGNMENT, 1)
+            buffer = glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
+            arr = np.frombuffer(buffer, dtype=np.uint8).reshape(height, width, 3)
+            arr = np.flipud(arr)  # flip vertically
+            AR.detect(arr)
+            pygame.mouse.set_visible(False)
+        
         pygame.display.flip()
         pygame.time.wait(10)
 
