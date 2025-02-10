@@ -22,7 +22,7 @@ def match(img):
     cap = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
     MIN_MATCHES = 15
-    model = cv2.imread('testImgs/Find.png', 0)
+    model = cv2.imread('testImgs/QR.png', 0)
     # ORB keypoint detector
     orb = cv2.ORB_create()              
     # create brute force  matcher object

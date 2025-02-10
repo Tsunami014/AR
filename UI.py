@@ -85,7 +85,7 @@ class Flat(Cube):
     @property
     def tex_coords(self):
         # Top, bottom, side*4
-        return [tex_coord(0, 0), tex_coord(1, 0), tex_coord(0, 0, 1)] + [tex_coord(2, 0)] * 3
+        return [tex_coord(0, 0, 16), tex_coord(0, 0, 16), tex_coord(0, 0, 1)] + [tex_coord(0, 0, 16)] * 3
     
     def verts(self):
         return (
@@ -123,7 +123,7 @@ pygame.mouse.set_visible(False)
 objs = [
     Cube(x, y, z) for x, y, z in [(0, 0, 0), (2, 0, 0), (0, 2, 0), (0, 0, 2), (-4, 0, 0)]
 ] + [
-    Flat(-2, 0, -1, 'Find')
+    Flat(-2, 0, -1, 'QR')
 ]
 
 up_down_angle = 0.0
@@ -152,7 +152,7 @@ while run:
         arr = np.frombuffer(buffer, dtype=np.uint8).reshape(height, width, 3)
         arr = np.flipud(arr)  # flip vertically
         pygame.mouse.set_visible(True)
-        AR.detect(arr)
+        AR.match(arr)
         pygame.mouse.set_visible(paused)
     
     if not paused:
