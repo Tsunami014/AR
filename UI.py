@@ -14,13 +14,13 @@ def tex_coords(top, bottom, side):
     return [tex_coord(*top), tex_coord(*bottom)] + [tex_coord(*side)] * 4
 
 # Define texture coordinates for a specific block type
-BLOCK1 = tex_coords((3, 0), (3, 0), (3, 0))
+BLOCK1 = tex_coords((0, 0), (1, 0), (2, 0))
 
 def verts(x, y, z):
     """Return the 8 corner vertices of a cube centered at (x, y, z)."""
     return (
-        (1+2*x, -1+2*y, -1+2*z), (1+2*x, 1+2*y, -1+2*z), (-1+2*x, 1+2*y, -1+2*z), (-1+2*x, -1+2*y, -1+2*z),
-        (1+2*x, -1+2*y, 1+2*z), (1+2*x, 1+2*y, 1+2*z), (-1+2*x, -1+2*y, 1+2*z), (-1+2*x, 1+2*y, 1+2*z)
+        (1+x, -1+y, -1+z), (1+x, 1+y, -1+z), (-1+x, 1+y, -1+z), (-1+x, -1+y, -1+z),
+        (1+x, -1+y, 1+z), (1+x, 1+y, 1+z), (-1+x, -1+y, 1+z), (-1+x, 1+y, 1+z)
     )
 
 # Define edges for wireframe rendering
@@ -28,6 +28,9 @@ edges = ((0,1), (0,3), (0,4), (2,1), (2,3), (2,7), (6,3), (6,4), (6,7), (5,1), (
 
 # Define surfaces for solid rendering
 surfaces = ((0,1,2,3), (3,2,7,6), (6,7,5,4), (4,5,1,0), (1,5,7,2), (4,0,3,6))
+"""A tuple of indices referring to the verts(x, y, z) function, which returns the cube's corner points
+
+What idx of vertex (in the verts func) goes for each solid surface (face)"""
 
 def Cube(x, y, z, block):
     """Render a textured cube at (x, y, z)."""
@@ -44,9 +47,9 @@ def Cube(x, y, z, block):
             glVertex3fv(verts(x, y, z)[vertex])
     glEnd()
 
-def loadTexture():
+def loadTexture(name='mars', nearest=False):
     """Load and configure a texture from an image file."""
-    textureSurface = pygame.image.load('testImgs/mars.png')
+    textureSurface = pygame.image.load(f'testImgs/{name}.png')
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
     width, height = textureSurface.get_size()
 
@@ -58,8 +61,12 @@ def loadTexture():
     # Set texture parameters for wrapping and filtering
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+    if nearest:
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+    else:
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+        glGenerateMipmap(GL_TEXTURE_2D)
     return texid
 
 # Initialize Pygame and OpenGL
@@ -143,7 +150,7 @@ while run:
         glEnable(GL_TEXTURE_2D)
         
         # Render cubes
-        for pos in [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (-2, 0, 0)]:
+        for pos in [(0, 0, 0), (2, 0, 0), (0, 2, 0), (0, 0, 2), (-4, 0, 0)]:
             Cube(*pos, BLOCK1)
         
         glDisable(GL_TEXTURE_2D)
