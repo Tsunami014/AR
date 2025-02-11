@@ -145,15 +145,6 @@ while run:
             pygame.mouse.set_pos(displayCenter)
 
     keypress = pygame.key.get_pressed()
-    if keypress[pygame.K_RETURN]:
-        width, height = display
-        glPixelStorei(GL_PACK_ALIGNMENT, 1)
-        buffer = glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
-        arr = np.frombuffer(buffer, dtype=np.uint8).reshape(height, width, 3)
-        arr = np.flipud(arr)  # flip vertically
-        pygame.mouse.set_visible(True)
-        AR.match(arr)
-        pygame.mouse.set_visible(paused)
     
     if not paused:
         glLoadIdentity()
@@ -164,7 +155,7 @@ while run:
         glLoadIdentity()
 
         # Movement controls
-        move_speed = 0.1
+        move_speed = 0.3
         if keypress[pygame.K_w]:
             glTranslatef(0, 0, move_speed)
         if keypress[pygame.K_s]:
@@ -204,6 +195,24 @@ while run:
         glEnd()
 
         glPopMatrix()
+        
+        width, height = display
+        glPixelStorei(GL_PACK_ALIGNMENT, 1)
+        buffer = glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
+        arr = np.frombuffer(buffer, dtype=np.uint8).reshape(height, width, 3)
+        arr = np.flipud(arr)  # flip vertically
+        if keypress[pygame.K_RETURN]:
+            pygame.mouse.set_visible(True)
+            sur = AR.match(arr, window=True)
+            pygame.mouse.set_visible(paused)
+        else:
+            sur = AR.match(arr, useMatches=False)
+        try:
+            textData = pygame.image.tostring(sur, "RGBA", True)
+            glWindowPos2d(0, 0)
+            glDrawPixels(sur.get_width(), sur.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, textData)
+        except TypeError:
+            pass
         
         pygame.display.flip()
         pygame.time.wait(10)

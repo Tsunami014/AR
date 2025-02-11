@@ -1,3 +1,4 @@
+import pygame
 import cv2
 import numpy as np
 
@@ -19,8 +20,7 @@ def detect(img):
     cv2.waitKey(0)
     cv2.destroyWindow('keypoints')
 
-def match(img, rectangle=True, matches=True):
-
+def match(img, rectangle=True, useMatches=True, window=False):
     cap = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
     # Init
@@ -36,6 +36,8 @@ def match(img, rectangle=True, matches=True):
     # Main
     # find and draw the keypoints of the frame
     kp_frame, des_frame = orb.detectAndCompute(cap, None)
+    if des_frame is None:
+        return img
     # match frame descriptors with model descriptors
     matches = bf.match(des_model, des_frame)
     # sort them in the order of their distance
@@ -67,14 +69,18 @@ def match(img, rectangle=True, matches=True):
             #     except:
             #         pass
             # draw first 10 matches.
-            if matches:
+            if useMatches:
                 cap = cv2.drawMatches(model, kp_model, cap, kp_frame, matches[:10], 0, flags=2)
-            # show result
-            cv2.imshow('frame', cap)
-            cv2.waitKey(0)
-            try:
-                cv2.destroyWindow('frame')
-            except:
-                pass
+            if window:
+                # show result
+                cv2.imshow('frame', cap)
+                cv2.waitKey(0)
+                try:
+                    cv2.destroyWindow('frame')
+                except:
+                    pass
+            return pygame.image.frombuffer(cap.tostring(), cap.shape[1::-1], "BGR")
     else:
-        print("Not enough matches have been found - %d/%d" % (len(matches), MIN_MATCHES))
+        if window:
+            print("Not enough matches have been found - %d/%d" % (len(matches), MIN_MATCHES))
+        return img
