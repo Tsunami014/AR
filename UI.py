@@ -16,7 +16,7 @@ def tex_coord(x, y, n=4):
 @lru_cache
 def loadTexture(name, nearest=False):
     """Load and configure a texture from an image file."""
-    textureSurface = pygame.image.load(f'testImgs/{name}.png')
+    textureSurface = pygame.transform.flip(pygame.image.load(f'testImgs/{name}.png'), True, False)
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
     width, height = textureSurface.get_size()
 
@@ -123,7 +123,7 @@ pygame.mouse.set_visible(False)
 objs = [
     Cube(x, y, z) for x, y, z in [(0, 0, 0), (2, 0, 0), (0, 2, 0), (0, 0, 2), (-4, 0, 0)]
 ] + [
-    Flat(-2, 0, -1, 'QR')
+    Flat(-2, 0, -1, 'model2')
 ]
 
 up_down_angle = 0.0

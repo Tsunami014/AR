@@ -24,8 +24,8 @@ def match(img, rectangle=True, matches=True):
     cap = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
     # Init
-    MIN_MATCHES = 15
-    model = cv2.imread('testImgs/QR.png', 0)
+    MIN_MATCHES = 10
+    model = cv2.imread('testImgs/model2.png', 0)
     # create ORB keypoint detector
     orb = cv2.ORB_create()
     # create BFMatcher object based on hamming distance  
@@ -72,6 +72,9 @@ def match(img, rectangle=True, matches=True):
             # show result
             cv2.imshow('frame', cap)
             cv2.waitKey(0)
-            cv2.destroyWindow('frame')
+            try:
+                cv2.destroyWindow('frame')
+            except:
+                pass
     else:
         print("Not enough matches have been found - %d/%d" % (len(matches), MIN_MATCHES))
